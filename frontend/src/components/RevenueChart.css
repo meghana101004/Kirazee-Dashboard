@@ -1,0 +1,25 @@
+.revenue-chart-container {
+  background-color: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.chart-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
+}
+
+/* Responsive Styles */
+@media (max-width: 767px) {
+  .revenue-chart-container {
+    padding: var(--spacing-md);
+  }
+
+  .chart-title {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-md);
+  }
+}
