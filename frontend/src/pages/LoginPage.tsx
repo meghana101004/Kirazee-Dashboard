@@ -20,8 +20,13 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(username, password)
-      // Redirect to dashboard on successful login
-      navigate('/dashboard')
+      // Redirect based on user role - managers go to manager dashboard
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (user.role === 'manager') {
+        navigate('/manager-dashboard')
+      } else {
+        navigate('/dashboard')
+      }
     } catch (err) {
       // Handle login error
       const axiosError = err as AxiosError<{ error?: string; message?: string }>
@@ -102,12 +107,12 @@ const LoginPage: React.FC = () => {
         <div style={styles.helpText}>
           <p>Sample credentials for testing:</p>
           <ul style={styles.credentialsList}>
-            <li>Super Admin: superadmin / admin123</li>
-            <li>Manager: manager / manager123</li>
-            <li>Support: support / support123</li>
-            <li>KYC Associate: kyc / kyc123</li>
-            <li>Finance: finance / finance123</li>
-            <li>Developer: developer / dev123</li>
+            <li>Super Admin: admin1 / admin123</li>
+            <li>Manager: manager1 / manager123</li>
+            <li>Support: support1 / support123</li>
+            <li>KYC Associate: kyc1 / kyc12345</li>
+            <li>Finance: finance1 / finance123</li>
+            <li>Developer: dev1 / dev12345</li>
           </ul>
         </div>
       </div>

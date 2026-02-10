@@ -33,6 +33,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, navigationM
     logout()
   }
 
+  const getDashboardTitle = () => {
+    if (user?.role === 'manager') {
+      return 'Manager Dashboard'
+    }
+    return 'Kirazee Dashboard'
+  }
+
   return (
     <div className="dashboard-layout">
       {/* Header */}
@@ -47,7 +54,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, navigationM
             <span></span>
             <span></span>
           </button>
-          <h1 className="dashboard-title">Kirazee Dashboard</h1>
+          <h1 className="dashboard-title">{getDashboardTitle()}</h1>
         </div>
         <div className="header-right">
           <div className="user-profile-wrapper">

@@ -4,6 +4,10 @@ import { Permission } from './types'
 import LoginPage from './pages/LoginPage'
 import DashboardHome from './pages/DashboardHome'
 import ManagerDashboard from './pages/ManagerDashboard'
+import OrdersPage from './pages/OrdersPage'
+import TotalRevenuePage from './pages/TotalRevenuePage'
+import ActiveUsersPage from './pages/ActiveUsersPage'
+import OrderFulfillmentPage from './pages/OrderFulfillmentPage'
 import RevenueReportsPage from './pages/RevenueReportsPage'
 import OrderManagementPage from './pages/OrderManagementPage'
 import KYCVerificationPage from './pages/KYCVerificationPage'
@@ -42,6 +46,46 @@ function App() {
             <ProtectedRoute requiredPermissions={[Permission.MANAGE_BUSINESSES]}>
               <DashboardLayout navigationMenu={<NavigationMenu />}>
                 <ManagerDashboard />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute requiredPermissions={[Permission.MANAGE_BUSINESSES]}>
+              <DashboardLayout navigationMenu={<NavigationMenu />}>
+                <OrdersPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/total-revenue"
+          element={
+            <ProtectedRoute requiredPermissions={[Permission.MANAGE_BUSINESSES]}>
+              <DashboardLayout navigationMenu={<NavigationMenu />}>
+                <TotalRevenuePage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/active-users"
+          element={
+            <ProtectedRoute requiredPermissions={[Permission.MANAGE_BUSINESSES]}>
+              <DashboardLayout navigationMenu={<NavigationMenu />}>
+                <ActiveUsersPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/order-fulfillment"
+          element={
+            <ProtectedRoute requiredPermissions={[Permission.MANAGE_BUSINESSES]}>
+              <DashboardLayout navigationMenu={<NavigationMenu />}>
+                <OrderFulfillmentPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

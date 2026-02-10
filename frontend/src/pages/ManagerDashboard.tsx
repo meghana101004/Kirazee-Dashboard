@@ -1,379 +1,430 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import MetricCard from '../components/MetricCard'
-import RevenueChart from '../components/RevenueChart'
-import apiClient from '../utils/apiClient'
-import { MetricsOverviewResponse, Permission, RevenueResponse } from '../types'
 import './ManagerDashboard.css'
 
-interface ManagerMetrics extends MetricsOverviewResponse {
-  operational_insights?: {
+interface OrderStats {
+    today: number
+    week: number
+    month: number
+    year: number
+}
+
+interface RevenueByCategory {
+    food: number
+    retail: number
+    pharmacy: number
+}
+
+interface OperationalInsights {
     pending_orders: number
     cancelled_orders: number
     delayed_orders: number
-    active_delivery_partners: number
-  }
-  support_tickets?: {
-    open: number
-    resolved: number
-    pending_approval: number
+    active_orders: number
+}
+
+interface TeamManagement {
+    support_tickets_opened: number
+    support_tickets_resolved: number
+    kyc_pending: number
+    kyc_approved: number
     finance_settlements_pending: number
-  }
-  performance?: {
-    peak_order_hours: string[]
-    city_zone_performance: Array<{
-      zone: string
-      orders: number
-      performance_score: number
-    }>
-    revenue_trend: {
-      daily: number
-      weekly: number
-      monthly: number
-    }
-  }
+}
+
+interface BusinessAnalytics {
+    revenue_trend: Array<{ date: string; revenue: number }>
+    peak_order_hours: Array<{ hour: string; orders: number }>
+}
+
+interface ManagerDashboardData {
+    total_orders: OrderStats
+    total_revenue: RevenueByCategory
+    active_users: number
+    order_fulfillment_rate: number
+    operational_insights: OperationalInsights
+    team_management: TeamManagement
+    business_analytics: BusinessAnalytics
 }
 
 const ManagerDashboard: React.FC = () => {
-  const { user } = useAuth()
-  const [metrics, setMetrics] = useState<ManagerMetrics | null>(null)
-  const [revenueData, setRevenueData] = useState<RevenueResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+    const { user } = useAuth()
+    const [dashboardData, setDashboardData] = useState<ManagerDashboardData | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [selectedTimeRange, setSelectedTimeRange] = useState<'today' | 'week' | 'month' | 'year'>('today')
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        
-        // Fetch metrics and revenue data in parallel
-        const [metricsResponse, revenueResponse] = await Promise.all([
-          apiClient.get<ManagerMetrics>('/metrics/overview'),
-          apiClient.get<RevenueResponse>('/revenue/daily?days=30')
-        ])
-        
-        setMetrics(metricsResponse.data)
-        setRevenueData(revenueResponse.data)
-      } catch (err: any) {
-        console.error('Failed to fetch dashboard data:', err)
-        setError(err.response?.data?.error || 'Failed to load dashboard data')
-      } finally {
-        setLoading(false)
-      }
+    useEffect(() => {
+        // Simulate API call with mock data for manager dashboard
+        const fetchManagerData = async () => {
+            try {
+                setLoading(true)
+
+                // Mock data - in real app this would come from API
+                const mockData: ManagerDashboardData = {
+                    total_orders: {
+                        today: 245,
+                        week: 1680,
+                        month: 7250,
+                        year: 89400
+                    },
+                    total_revenue: {
+                        food: 125000,
+                        retail: 85000,
+                        pharmacy: 45000
+                    },
+                    active_users: 12450,
+                    order_fulfillment_rate: 94.5,
+                    operational_insights: {
+                        pending_orders: 23,
+                        cancelled_orders: 12,
+                        delayed_orders: 8,
+                        active_orders: 156
+                    },
+                    team_management: {
+                        support_tickets_opened: 45,
+                        support_tickets_resolved: 38,
+                        kyc_pending: 15,
+                        kyc_approved: 28,
+                        finance_settlements_pending: 7
+                    },
+                    business_analytics: {
+                        revenue_trend: [
+                            { date: '2026-02-03', revenue: 12500 },
+                            { date: '2026-02-04', revenue: 13200 },
+                            { date: '2026-02-05', revenue: 11800 },
+                            { date: '2026-02-06', revenue: 14500 },
+                            { date: '2026-02-07', revenue: 13900 },
+                            { date: '2026-02-08', revenue: 15200 },
+                            { date: '2026-02-09', revenue: 14800 },
+                            { date: '2026-02-10', revenue: 16100 }
+                        ],
+                        peak_order_hours: [
+                            { hour: '12:00 PM', orders: 89 },
+                            { hour: '1:00 PM', orders: 76 },
+                            { hour: '7:00 PM', orders: 94 },
+                            { hour: '8:00 PM', orders: 82 }
+                        ]
+                    }
+                }
+
+                setDashboardData(mockData)
+            } catch (error) {
+                console.error('Failed to fetch manager dashboard data:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchManagerData()
+    }, [])
+
+    const formatCurrency = (value: number): string => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+        }).format(value)
     }
 
-    fetchData()
-  }, [])
+    const formatNumber = (value: number): string => {
+        return new Intl.NumberFormat('en-US').format(value)
+    }
 
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value)
-  }
+    if (loading) {
+        return (
+            <div className="manager-dashboard">
+                <div className="dashboard-header">
+                    <h1>Manager Dashboard</h1>
+                    <p className="welcome-message">Welcome back, {user?.username}!</p>
+                </div>
+                <div className="loading-state">
+                    <div className="spinner"></div>
+                    <p>Loading dashboard data...</p>
+                </div>
+            </div>
+        )
+    }
 
-  if (loading) {
+    if (!dashboardData) {
+        return (
+            <div className="manager-dashboard">
+                <div className="dashboard-header">
+                    <h1>Manager Dashboard</h1>
+                    <p className="welcome-message">Welcome back, {user?.username}!</p>
+                </div>
+                <div className="error-state">
+                    <div className="error-icon"></div>
+                    <h3>No Data Available</h3>
+                    <p>Unable to load dashboard data at this time.</p>
+                </div>
+            </div>
+        )
+    }
+
     return (
-      <div className="manager-dashboard">
-        <div className="dashboard-header">
-          <h1>Manager Dashboard</h1>
-          <p className="welcome-message">Welcome back, {user?.username}!</p>
+        <div className="manager-dashboard">
+            {/* Header */}
+            <div className="dashboard-header">
+                <div className="header-content">
+                    <div className="header-text">
+                        <h1>Business Overview</h1>
+                        <p className="welcome-message">Welcome back, {user?.username}! Here's your business performance summary.</p>
+                    </div>
+                    <div className="time-range-selector">
+                        <button
+                            className={selectedTimeRange === 'today' ? 'active' : ''}
+                            onClick={() => setSelectedTimeRange('today')}
+                        >
+                            Today
+                        </button>
+                        <button
+                            className={selectedTimeRange === 'week' ? 'active' : ''}
+                            onClick={() => setSelectedTimeRange('week')}
+                        >
+                            Week
+                        </button>
+                        <button
+                            className={selectedTimeRange === 'month' ? 'active' : ''}
+                            onClick={() => setSelectedTimeRange('month')}
+                        >
+                            Month
+                        </button>
+                        <button
+                            className={selectedTimeRange === 'year' ? 'active' : ''}
+                            onClick={() => setSelectedTimeRange('year')}
+                        >
+                            Year
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="dashboard-content">
+                {/* 1. Total Orders Section */}
+                <div id="total-orders" className="dashboard-section">
+                    <div className="section-header">
+                        <h2 className="section-title">Total Orders</h2>
+                        <span className="section-badge">Orders</span>
+                    </div>
+                    <div className="metrics-grid">
+                        <div className="metric-card">
+                            <div className="metric-icon"></div>
+                            <div className="metric-content">
+                                <h3>{formatNumber(dashboardData.total_orders.today)}</h3>
+                                <p>Today</p>
+                            </div>
+                        </div>
+                        <div className="metric-card">
+                            <div className="metric-icon"></div>
+                            <div className="metric-content">
+                                <h3>{formatNumber(dashboardData.total_orders.week)}</h3>
+                                <p>This Week</p>
+                            </div>
+                        </div>
+                        <div className="metric-card">
+                            <div className="metric-icon"></div>
+                            <div className="metric-content">
+                                <h3>{formatNumber(dashboardData.total_orders.month)}</h3>
+                                <p>This Month</p>
+                            </div>
+                        </div>
+                        <div className="metric-card">
+                            <div className="metric-icon"></div>
+                            <div className="metric-content">
+                                <h3>{formatNumber(dashboardData.total_orders.year)}</h3>
+                                <p>This Year</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. Total Revenue by Categories */}
+                <div id="total-revenue" className="dashboard-section">
+                    <div className="section-header">
+                        <h2 className="section-title">Total Revenue by Category</h2>
+                        <span className="section-badge">Revenue</span>
+                    </div>
+                    <div className="revenue-categories">
+                        <div className="category-card food">
+                            <div className="category-icon"></div>
+                            <div className="category-content">
+                                <h3>{formatCurrency(dashboardData.total_revenue.food)}</h3>
+                                <p>Food & Beverages</p>
+                                <span className="category-percentage">49%</span>
+                            </div>
+                        </div>
+                        <div className="category-card retail">
+                            <div className="category-icon"></div>
+                            <div className="category-content">
+                                <h3>{formatCurrency(dashboardData.total_revenue.retail)}</h3>
+                                <p>Retail & Shopping</p>
+                                <span className="category-percentage">33%</span>
+                            </div>
+                        </div>
+                        <div className="category-card pharmacy">
+                            <div className="category-icon"></div>
+                            <div className="category-content">
+                                <h3>{formatCurrency(dashboardData.total_revenue.pharmacy)}</h3>
+                                <p>Pharmacy & Health</p>
+                                <span className="category-percentage">18%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 3. Active Users & Order Fulfillment */}
+                <div id="active-users" className="dashboard-section">
+                    <div className="section-header">
+                        <h2 className="section-title">User Metrics & Fulfillment</h2>
+                        <span className="section-badge">Performance</span>
+                    </div>
+                    <div className="metrics-grid">
+                        <div id="order-fulfillment" className="metric-card large">
+                            <div className="metric-icon"></div>
+                            <div className="metric-content">
+                                <h3>{formatNumber(dashboardData.active_users)}</h3>
+                                <p>Active Users</p>
+                                <span className="trend positive">↗ +12% from last month</span>
+                            </div>
+                        </div>
+                        <div className="metric-card large">
+                            <div className="metric-icon"></div>
+                            <div className="metric-content">
+                                <h3>{dashboardData.order_fulfillment_rate}%</h3>
+                                <p>Order Fulfillment Rate</p>
+                                <span className="trend positive">↗ +2.3% from last week</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 4. Business Analysis */}
+                <div className="dashboard-section">
+                    <div className="section-header">
+                        <h2 className="section-title">Business Analysis</h2>
+                        <span className="section-badge">Analytics</span>
+                    </div>
+                    <div className="business-analysis">
+                        <div className="revenue-trend-chart">
+                            <h4>Revenue Trend (Last 7 Days)</h4>
+                            <div className="chart-container">
+                                {dashboardData.business_analytics.revenue_trend.map((item, index) => (
+                                    <div key={index} className="chart-bar">
+                                        <div
+                                            className="bar"
+                                            style={{ height: `${(item.revenue / 20000) * 100}%` }}
+                                        ></div>
+                                        <span className="bar-label">{new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                        <span className="bar-value">{formatCurrency(item.revenue)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="peak-hours-analysis">
+                            <h4>Peak Order Hours</h4>
+                            <div className="peak-hours-grid">
+                                {dashboardData.business_analytics.peak_order_hours.map((item, index) => (
+                                    <div key={index} className="peak-hour-card">
+                                        <div className="hour-time">{item.hour}</div>
+                                        <div className="hour-orders">{item.orders} orders</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 5. Operational Insights */}
+                <div className="dashboard-section">
+                    <div className="section-header">
+                        <h2 className="section-title">Operational Insights</h2>
+                        <span className="section-badge">Operations</span>
+                    </div>
+                    <div className="operational-grid">
+                        <div className="operational-card pending">
+                            <div className="op-icon"></div>
+                            <div className="op-content">
+                                <h3>{dashboardData.operational_insights.pending_orders}</h3>
+                                <p>Pending Orders</p>
+                            </div>
+                        </div>
+                        <div className="operational-card cancelled">
+                            <div className="op-icon"></div>
+                            <div className="op-content">
+                                <h3>{dashboardData.operational_insights.cancelled_orders}</h3>
+                                <p>Cancelled Orders</p>
+                            </div>
+                        </div>
+                        <div className="operational-card delayed">
+                            <div className="op-icon"></div>
+                            <div className="op-content">
+                                <h3>{dashboardData.operational_insights.delayed_orders}</h3>
+                                <p>Delayed Orders</p>
+                            </div>
+                        </div>
+                        <div className="operational-card active">
+                            <div className="op-icon"></div>
+                            <div className="op-content">
+                                <h3>{dashboardData.operational_insights.active_orders}</h3>
+                                <p>Active Orders</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 6. Team Management */}
+                <div className="dashboard-section">
+                    <div className="section-header">
+                        <h2 className="section-title">Team Management</h2>
+                        <span className="section-badge">Team</span>
+                    </div>
+                    <div className="team-management-grid">
+                        <div className="team-card support">
+                            <div className="team-header">
+                                <h4>Support Tickets</h4>
+                                <div className="team-icon"></div>
+                            </div>
+                            <div className="team-stats">
+                                <div className="stat">
+                                    <span className="stat-number">{dashboardData.team_management.support_tickets_opened}</span>
+                                    <span className="stat-label">Opened</span>
+                                </div>
+                                <div className="stat">
+                                    <span className="stat-number">{dashboardData.team_management.support_tickets_resolved}</span>
+                                    <span className="stat-label">Resolved</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="team-card kyc">
+                            <div className="team-header">
+                                <h4>KYC Management</h4>
+                                <div className="team-icon"></div>
+                            </div>
+                            <div className="team-stats">
+                                <div className="stat">
+                                    <span className="stat-number">{dashboardData.team_management.kyc_pending}</span>
+                                    <span className="stat-label">Pending</span>
+                                </div>
+                                <div className="stat">
+                                    <span className="stat-number">{dashboardData.team_management.kyc_approved}</span>
+                                    <span className="stat-label">Approved</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="team-card finance">
+                            <div className="team-header">
+                                <h4>Finance Settlements</h4>
+                                <div className="team-icon"></div>
+                            </div>
+                            <div className="team-stats">
+                                <div className="stat">
+                                    <span className="stat-number">{dashboardData.team_management.finance_settlements_pending}</span>
+                                    <span className="stat-label">Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Loading dashboard data...</p>
-        </div>
-      </div>
     )
-  }
-
-  if (error) {
-    return (
-      <div className="manager-dashboard">
-        <div className="dashboard-header">
-          <h1>Manager Dashboard</h1>
-          <p className="welcome-message">Welcome back, {user?.username}!</p>
-        </div>
-        <div className="error-state">
-          <div className="error-icon">⚠️</div>
-          <h3>Failed to Load Dashboard</h3>
-          <p>{error}</p>
-          <button 
-            className="retry-button"
-            onClick={() => window.location.reload()}
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="manager-dashboard">
-      {/* Header with Key Stats */}
-      <div className="dashboard-header">
-        <div className="header-content">
-          <div className="header-text">
-            <h1>Manager Dashboard</h1>
-            <p className="welcome-message">Welcome back, {user?.username}!</p>
-          </div>
-          <div className="header-stats">
-            <div className="header-stat-card">
-              <div className="stat-icon orders-icon">📦</div>
-              <div className="stat-content">
-                <span className="stat-value">{metrics?.orders?.total || 0}</span>
-                <span className="stat-title">Total Orders</span>
-              </div>
-            </div>
-            <div className="header-stat-card">
-              <div className="stat-icon revenue-icon">💰</div>
-              <div className="stat-content">
-                <span className="stat-value">{formatCurrency(metrics?.revenue?.total || 0)}</span>
-                <span className="stat-title">Total Revenue</span>
-              </div>
-            </div>
-            <div className="header-stat-card">
-              <div className="stat-icon users-icon">👥</div>
-              <div className="stat-content">
-                <span className="stat-value">{metrics?.customers?.active || 0}</span>
-                <span className="stat-title">Active Users</span>
-              </div>
-            </div>
-            <div className="header-stat-card">
-              <div className="stat-icon vendors-icon">🏪</div>
-              <div className="stat-content">
-                <span className="stat-value">{metrics?.businesses?.active || 0}</span>
-                <span className="stat-title">Active Vendors</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="dashboard-content">
-        {/* Order Fulfillment Section */}
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2 className="section-title">📋 Order Fulfillment</h2>
-            <span className="section-badge">Operations</span>
-          </div>
-          <div className="metrics-row">
-            <MetricCard
-              title="Pending Orders"
-              value={metrics?.orders?.pending?.toLocaleString() || '0'}
-              iconType="order"
-              trend={{
-                value: -5,
-                direction: 'down'
-              }}
-              permission={Permission.VIEW_ORDERS}
-            />
-            <MetricCard
-              title="Cancelled Orders"
-              value={metrics?.orders?.cancelled?.toLocaleString() || '0'}
-              iconType="order"
-              permission={Permission.VIEW_ORDERS}
-            />
-            <MetricCard
-              title="Delayed Orders"
-              value={metrics?.operational_insights?.delayed_orders?.toLocaleString() || '0'}
-              iconType="order"
-              permission={Permission.VIEW_ORDERS}
-            />
-            <MetricCard
-              title="Active Delivery Partners"
-              value={metrics?.delivery_partners?.active?.toLocaleString() || '0'}
-              iconType="delivery"
-              permission={Permission.VIEW_DELIVERY_PARTNERS}
-            />
-          </div>
-        </div>
-
-        {/* Revenue Analytics Section */}
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2 className="section-title">📊 Revenue Analytics</h2>
-            <span className="section-badge">Financial</span>
-          </div>
-          <div className="revenue-section">
-            <div className="revenue-metrics">
-              <MetricCard
-                title="Revenue Trend (Daily)"
-                value={`${metrics?.performance?.revenue_trend?.daily || 0}%`}
-                iconType="chart"
-                trend={{
-                  value: metrics?.performance?.revenue_trend?.daily || 0,
-                  direction: (metrics?.performance?.revenue_trend?.daily || 0) >= 0 ? 'up' : 'down'
-                }}
-                permission={Permission.VIEW_REVENUE}
-              />
-              <MetricCard
-                title="Revenue Trend (Weekly)"
-                value={`${metrics?.performance?.revenue_trend?.weekly || 0}%`}
-                iconType="chart"
-                trend={{
-                  value: metrics?.performance?.revenue_trend?.weekly || 0,
-                  direction: (metrics?.performance?.revenue_trend?.weekly || 0) >= 0 ? 'up' : 'down'
-                }}
-                permission={Permission.VIEW_REVENUE}
-              />
-              <MetricCard
-                title="Revenue Trend (Monthly)"
-                value={`${metrics?.performance?.revenue_trend?.monthly || 0}%`}
-                iconType="chart"
-                trend={{
-                  value: metrics?.performance?.revenue_trend?.monthly || 0,
-                  direction: (metrics?.performance?.revenue_trend?.monthly || 0) >= 0 ? 'up' : 'down'
-                }}
-                permission={Permission.VIEW_REVENUE}
-              />
-            </div>
-            {revenueData && (
-              <div className="revenue-chart-container">
-                <RevenueChart data={revenueData.data} />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* City/Zone Performance Section */}
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2 className="section-title">🗺️ City/Zone Performance</h2>
-            <span className="section-badge">Geography</span>
-          </div>
-          <div className="zone-performance">
-            {metrics?.performance?.city_zone_performance?.map((zone, index) => (
-              <div key={index} className="zone-card">
-                <div className="zone-header">
-                  <h4>{zone.zone}</h4>
-                  <span className={`performance-score ${zone.performance_score >= 80 ? 'high' : zone.performance_score >= 60 ? 'medium' : 'low'}`}>
-                    {zone.performance_score}%
-                  </span>
-                </div>
-                <div className="zone-orders">
-                  <span className="orders-count">{zone.orders.toLocaleString()}</span>
-                  <span className="orders-label">Orders</span>
-                </div>
-              </div>
-            )) || (
-              <div className="zone-card">
-                <div className="zone-header">
-                  <h4>Downtown</h4>
-                  <span className="performance-score high">85%</span>
-                </div>
-                <div className="zone-orders">
-                  <span className="orders-count">1,245</span>
-                  <span className="orders-label">Orders</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Peak Order Hours Section */}
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2 className="section-title">⏰ Peak Order Hours</h2>
-            <span className="section-badge">Timing</span>
-          </div>
-          <div className="peak-hours">
-            {metrics?.performance?.peak_order_hours?.map((hour, index) => (
-              <div key={index} className="hour-card">
-                <div className="hour-time">{hour}</div>
-                <div className="hour-label">Peak Hour</div>
-              </div>
-            )) || (
-              <>
-                <div className="hour-card">
-                  <div className="hour-time">12:00 PM</div>
-                  <div className="hour-label">Lunch Rush</div>
-                </div>
-                <div className="hour-card">
-                  <div className="hour-time">7:00 PM</div>
-                  <div className="hour-label">Dinner Rush</div>
-                </div>
-                <div className="hour-card">
-                  <div className="hour-time">9:00 PM</div>
-                  <div className="hour-label">Evening Peak</div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Operational Insights Section */}
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2 className="section-title">🔍 Operational Insights</h2>
-            <span className="section-badge">Analytics</span>
-          </div>
-          <div className="insights-grid">
-            <div className="insight-card">
-              <div className="insight-icon">📈</div>
-              <div className="insight-content">
-                <h4>Order Efficiency</h4>
-                <p>Average delivery time: 28 minutes</p>
-                <span className="insight-trend positive">↗ 12% improvement</span>
-              </div>
-            </div>
-            <div className="insight-card">
-              <div className="insight-icon">🚚</div>
-              <div className="insight-content">
-                <h4>Delivery Performance</h4>
-                <p>On-time delivery rate: 94%</p>
-                <span className="insight-trend positive">↗ 3% increase</span>
-              </div>
-            </div>
-            <div className="insight-card">
-              <div className="insight-icon">⭐</div>
-              <div className="insight-content">
-                <h4>Customer Satisfaction</h4>
-                <p>Average rating: 4.7/5</p>
-                <span className="insight-trend positive">↗ 0.2 points</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Support Tickets Section */}
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2 className="section-title">🎫 Support Tickets</h2>
-            <span className="section-badge">Support</span>
-          </div>
-          <div className="metrics-row">
-            <MetricCard
-              title="Open Tickets"
-              value={metrics?.support_tickets?.open?.toLocaleString() || '23'}
-              iconType="support"
-              permission={Permission.MANAGE_NOTIFICATIONS}
-            />
-            <MetricCard
-              title="Resolved Tickets"
-              value={metrics?.support_tickets?.resolved?.toLocaleString() || '156'}
-              iconType="support"
-              permission={Permission.MANAGE_NOTIFICATIONS}
-            />
-            <MetricCard
-              title="KYC Pending Approval"
-              value={metrics?.support_tickets?.pending_approval?.toLocaleString() || '8'}
-              iconType="kyc"
-              permission={Permission.VIEW_KYC_QUEUE}
-            />
-            <MetricCard
-              title="Finance Settlements Pending"
-              value={metrics?.support_tickets?.finance_settlements_pending?.toLocaleString() || '12'}
-              iconType="finance"
-              permission={Permission.VIEW_FINANCIAL_REPORTS}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 export default ManagerDashboard

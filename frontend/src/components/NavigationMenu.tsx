@@ -1,33 +1,62 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Permission } from '../types'
 import './NavigationMenu.css'
+
+interface SubMenuItem {
+  label: string
+  path: string
+  icon: string
+}
 
 interface MenuItem {
   label: string
   path: string
   icon: string
   permissions: Permission[]
+  subItems?: SubMenuItem[]
 }
 
 const MENU_ITEMS: MenuItem[] = [
   {
     label: 'Dashboard',
     path: '/dashboard',
-    icon: '🏠',
+    icon: '',
     permissions: [], // All authenticated users can access dashboard
   },
   {
-    label: 'Manager Dashboard',
+    label: 'Business Overview',
     path: '/manager-dashboard',
-    icon: '📊',
+    icon: '',
     permissions: [Permission.MANAGE_BUSINESSES], // Manager-specific dashboard
+    subItems: [
+      {
+        label: 'Orders',
+        path: '/orders',
+        icon: ''
+      },
+      {
+        label: 'Total Revenue',
+        path: '/total-revenue',
+        icon: ''
+      },
+      {
+        label: 'Active Users',
+        path: '/active-users',
+        icon: ''
+      },
+      {
+        label: 'Order Fulfillment',
+        path: '/order-fulfillment',
+        icon: ''
+      }
+    ]
   },
   {
     label: 'User Management',
     path: '/user-management',
-    icon: '👥',
+    icon: '',
     permissions: [Permission.MANAGE_USERS],
   },
   {
@@ -35,12 +64,6 @@ const MENU_ITEMS: MenuItem[] = [
     path: '/revenue-reports',
     icon: '',
     permissions: [Permission.VIEW_REVENUE, Permission.VIEW_FINANCIAL_REPORTS],
-  },
-  {
-    label: 'Order Management',
-    path: '/order-management',
-    icon: '',
-    permissions: [Permission.VIEW_ORDERS, Permission.MANAGE_ORDERS],
   },
   {
     label: 'KYC Verification',
@@ -53,12 +76,6 @@ const MENU_ITEMS: MenuItem[] = [
     path: '/system-logs',
     icon: '',
     permissions: [Permission.VIEW_SYSTEM_LOGS, Permission.VIEW_API_ANALYTICS],
-  },
-  {
-    label: 'Business Management',
-    path: '/businesses',
-    icon: '',
-    permissions: [Permission.MANAGE_BUSINESSES],
   },
   {
     label: 'Delivery Partners',
@@ -83,6 +100,7 @@ const MENU_ITEMS: MenuItem[] = [
 const NavigationMenu: React.FC = () => {
   const { hasPermission } = useAuth()
   const location = useLocation()
+  const [openDropdowns, setOpenDropdowns] = useState<string[]>([])
 
   // Filter menu items based on user permissions
   const visibleMenuItems = MENU_ITEMS.filter((item) => {
@@ -94,20 +112,73 @@ const NavigationMenu: React.FC = () => {
     return item.permissions.some((permission) => hasPermission(permission))
   })
 
+  const toggleDropdown = (itemPath: string) => {
+    setOpenDropdowns(prev => 
+      prev.includes(itemPath) 
+        ? prev.filter(path => path !== itemPath)
+        : [...prev, itemPath]
+    )
+  }
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
   return (
     <nav className="navigation-menu">
       <ul className="menu-list">
         {visibleMenuItems.map((item) => {
           const isActive = location.pathname === item.path
+          const isDropdownOpen = openDropdowns.includes(item.path)
+          
           return (
             <li key={item.path} className="menu-item">
-              <Link
-                to={item.path}
-                className={`menu-link ${isActive ? 'active' : ''}`}
-              >
-                <span className="menu-icon">{item.icon}</span>
-                <span className="menu-label">{item.label}</span>
-              </Link>
+              {item.subItems ? (
+                // Dropdown menu item
+                <div className="dropdown-container">
+                  <div
+                    className={`menu-link dropdown-toggle ${isActive ? 'active' : ''}`}
+                    onClick={() => toggleDropdown(item.path)}
+                  >
+                    <span className="menu-icon">{item.icon}</span>
+                    <span className="menu-label">{item.label}</span>
+                    <span className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
+                  </div>
+                  {isDropdownOpen && (
+                    <ul className="dropdown-menu">
+                      {item.subItems.map((subItem) => (
+                        <li key={subItem.path} className="dropdown-item">
+                          <Link
+                            to={subItem.path.split('#')[0]}
+                            className="dropdown-link"
+                            onClick={() => {
+                              const sectionId = subItem.path.split('#')[1]
+                              if (sectionId) {
+                                setTimeout(() => scrollToSection(sectionId), 100)
+                              }
+                            }}
+                          >
+                            <span className="menu-icon">{subItem.icon}</span>
+                            <span className="menu-label">{subItem.label}</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ) : (
+                // Regular menu item
+                <Link
+                  to={item.path}
+                  className={`menu-link ${isActive ? 'active' : ''}`}
+                >
+                  <span className="menu-icon">{item.icon}</span>
+                  <span className="menu-label">{item.label}</span>
+                </Link>
+              )}
             </li>
           )
         })}
