@@ -15,13 +15,19 @@ const MENU_ITEMS: MenuItem[] = [
   {
     label: 'Dashboard',
     path: '/dashboard',
-    icon: '',
+    icon: '🏠',
     permissions: [], // All authenticated users can access dashboard
+  },
+  {
+    label: 'Manager Dashboard',
+    path: '/manager-dashboard',
+    icon: '📊',
+    permissions: [Permission.MANAGE_BUSINESSES], // Manager-specific dashboard
   },
   {
     label: 'User Management',
     path: '/user-management',
-    icon: '',
+    icon: '👥',
     permissions: [Permission.MANAGE_USERS],
   },
   {

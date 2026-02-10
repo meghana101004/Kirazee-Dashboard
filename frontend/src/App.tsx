@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { Permission } from './types'
 import LoginPage from './pages/LoginPage'
 import DashboardHome from './pages/DashboardHome'
+import ManagerDashboard from './pages/ManagerDashboard'
 import RevenueReportsPage from './pages/RevenueReportsPage'
 import OrderManagementPage from './pages/OrderManagementPage'
 import KYCVerificationPage from './pages/KYCVerificationPage'
@@ -31,6 +32,16 @@ function App() {
             <ProtectedRoute requiredPermissions={[]}>
               <DashboardLayout navigationMenu={<NavigationMenu />}>
                 <DashboardHome />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager-dashboard"
+          element={
+            <ProtectedRoute requiredPermissions={[Permission.MANAGE_BUSINESSES]}>
+              <DashboardLayout navigationMenu={<NavigationMenu />}>
+                <ManagerDashboard />
               </DashboardLayout>
             </ProtectedRoute>
           }
